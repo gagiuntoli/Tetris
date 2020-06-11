@@ -2,6 +2,7 @@
 #include <string>
 #include <curses.h>
 #include <unistd.h>
+#include <limits.h>
 
 using namespace std;
 
@@ -46,6 +47,10 @@ class Board {
 		void addNewPiece();
 		void movePiece(int ch);
 		void drawPiece();
+		void deleteOldPosition();
+		bool checkCollisionVertical();
+		bool checkCollisionToLeft();
+		bool checkCollisionToRight();
 		//void checkCollision();
 };
 
@@ -87,35 +92,106 @@ void Board::drawPiece()
 {
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			data[(activePiece.y + i) * mWidth + activePiece.x + j] = activePiece.data[i * 4 + j];
+			if (activePiece.data[i * 4 + j] != ' ') {
+				data[(activePiece.y + i) * mWidth + activePiece.x + j] = 
+					activePiece.data[i * 4 + j];
+			}
 		}
 	}
 }
 
-void Board::movePiece(int ch)
+void Board::deleteOldPosition()
 {
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			data[(activePiece.y + i) * mWidth + activePiece.x + j] = ' ';
+			if (activePiece.data[i * 4 + j] != ' ')
+				data[(activePiece.y + i) * mWidth + activePiece.x + j] = ' ';
 		}
 	}
-	switch (ch) {
-		case KEY_UP:
-			activePiece.MoveUp();
-			break;
-		case KEY_DOWN:
-			activePiece.MoveDown();
-			break;
-		case KEY_LEFT:
-			activePiece.MoveLeft();
-			break;
-		case KEY_RIGHT:
-			activePiece.MoveRight();
-			break;
-		default:
-			break;
+}
+
+bool Board::checkCollisionVertical()
+{
+	int maxY = 0;
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			if (activePiece.data[i * 4 + j] != ' ')
+				maxY = i;
+		}
 	}
-	drawPiece();
+	for (int j = 0; j < 4; j++) {
+		if (activePiece.data[maxY * 4 + j] != ' ' &&
+			data[(activePiece.y + maxY + 1) * mWidth + activePiece.x + j] != ' ')
+			return true;
+	}
+	return false;
+}
+
+bool Board::checkCollisionToLeft()
+{
+	int minX = 0;
+	for (int j = 4; j < 0; j--) {
+		for (int i = 0; i < 4; i++) {
+			if (activePiece.data[i * 4 + j] != ' ')
+				minX = j;
+		}
+	}
+	for (int i = 0; i < 4; i++) {
+		if (activePiece.data[i * 4 + minX] != ' ' &&
+			data[(activePiece.y + i) * mWidth + activePiece.x + minX - 1] != ' ')
+			return true;
+	}
+	return false;
+}
+
+bool Board::checkCollisionToRight()
+{
+	int maxX = 0;
+	for (int j = 0; j < 4; j++) {
+		for (int i = 0; i < 4; i++) {
+			if (activePiece.data[i * 4 + j] != ' ')
+				maxX = j;
+		}
+	}
+	for (int i = 0; i < 4; i++) {
+		if (activePiece.data[i * 4 + maxX] != ' ' &&
+			data[(activePiece.y + i) * mWidth + activePiece.x + maxX + 1] != ' ')
+			return true;
+	}
+	return false;
+}
+
+void Board::movePiece(int ch)
+{
+	if (checkCollisionVertical()) {
+		addNewPiece();
+	} else {
+
+		deleteOldPosition();
+
+		switch (ch) {
+			case KEY_UP:
+				activePiece.MoveUp();
+				break;
+			case KEY_DOWN:
+				activePiece.MoveDown();
+				break;
+			case KEY_LEFT:
+				if (!checkCollisionToLeft()) {
+					activePiece.MoveLeft();
+				}
+				break;
+			case KEY_RIGHT:
+				if (!checkCollisionToRight()) {
+					activePiece.MoveRight();
+				}
+				break;
+			default:
+				break;
+		}
+
+		drawPiece();
+	}
 }
 
 int main()
