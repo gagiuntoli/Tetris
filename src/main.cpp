@@ -1,5 +1,6 @@
 
 #include <string>
+#include <cstdlib>
 #include <curses.h>
 #include <unistd.h>
 #include <limits.h>
@@ -20,11 +21,51 @@ enum {
 
 };
 
-constexpr int piecesCodes[1][16] = {
-	{       EMPTY, PIEC1, EMPTY, EMPTY,
-		PIEC1, PIEC1, PIEC1, EMPTY, 
-		EMPTY, EMPTY, EMPTY, EMPTY,
-	       	EMPTY, EMPTY, EMPTY, EMPTY}};
+// [piece ID][Rotation
+constexpr int piecesCodes[7][4][16] = {
+	{
+{EMPTY, PIEC1, EMPTY, EMPTY, PIEC1, PIEC1, PIEC1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, PIEC1, EMPTY, EMPTY, EMPTY, PIEC1, PIEC1, EMPTY, EMPTY, PIEC1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, EMPTY, EMPTY, EMPTY, PIEC1, PIEC1, PIEC1, EMPTY, EMPTY, PIEC1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, PIEC1, EMPTY, EMPTY, PIEC1, PIEC1, EMPTY, EMPTY, EMPTY, PIEC1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+	},
+	{
+{EMPTY, PIEC2, EMPTY, EMPTY, EMPTY, PIEC2, EMPTY, EMPTY, PIEC2, PIEC2, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC2, EMPTY, EMPTY, EMPTY, PIEC2, PIEC2, PIEC2, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, PIEC2, PIEC2, EMPTY, EMPTY, PIEC2, EMPTY, EMPTY, EMPTY, PIEC2, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, EMPTY, EMPTY, EMPTY, PIEC2, PIEC2, PIEC2, EMPTY, EMPTY, EMPTY, PIEC2, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+	},
+	{
+{EMPTY, PIEC3, EMPTY, EMPTY, EMPTY, PIEC3, EMPTY, EMPTY, EMPTY, PIEC3, PIEC3, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, EMPTY, EMPTY, EMPTY, PIEC3, PIEC3, PIEC3, EMPTY, PIEC3, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC3, PIEC3, EMPTY, EMPTY, EMPTY, PIEC3, EMPTY, EMPTY, EMPTY, PIEC3, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, EMPTY, PIEC3, EMPTY, PIEC3, PIEC3, PIEC3, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+	},
+	{
+{EMPTY, PIEC4, EMPTY, EMPTY, EMPTY, PIEC4, EMPTY, EMPTY, EMPTY, PIEC4, EMPTY, EMPTY, EMPTY, PIEC4, EMPTY, EMPTY},
+{EMPTY, EMPTY, EMPTY, EMPTY, PIEC4, PIEC4, PIEC4, PIEC4, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, PIEC4, EMPTY, EMPTY, EMPTY, PIEC4, EMPTY, EMPTY, EMPTY, PIEC4, EMPTY, EMPTY, EMPTY, PIEC4, EMPTY, EMPTY},
+{EMPTY, EMPTY, EMPTY, EMPTY, PIEC4, PIEC4, PIEC4, PIEC4, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+	},
+	{
+{EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, PIEC5, PIEC5, EMPTY, PIEC5, PIEC5, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC5, EMPTY, EMPTY, EMPTY, PIEC5, PIEC5, EMPTY, EMPTY, EMPTY, PIEC5, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, PIEC5, PIEC5, EMPTY, PIEC5, PIEC5, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC5, EMPTY, EMPTY, EMPTY, PIEC5, PIEC5, EMPTY, EMPTY, EMPTY, PIEC5, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+	},
+	{
+{PIEC6, PIEC6, EMPTY, EMPTY, EMPTY, PIEC6, PIEC6, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, EMPTY, PIEC6, EMPTY, EMPTY, PIEC6, PIEC6, EMPTY, EMPTY, PIEC6, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC6, PIEC6, EMPTY, EMPTY, EMPTY, PIEC6, PIEC6, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{EMPTY, EMPTY, PIEC6, EMPTY, EMPTY, PIEC6, PIEC6, EMPTY, EMPTY, PIEC6, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+	},
+	{
+{PIEC7, PIEC7, EMPTY, EMPTY, PIEC7, PIEC7, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC7, PIEC7, EMPTY, EMPTY, PIEC7, PIEC7, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC7, PIEC7, EMPTY, EMPTY, PIEC7, PIEC7, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+{PIEC7, PIEC7, EMPTY, EMPTY, PIEC7, PIEC7, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+	}
+};
 
 constexpr int colors[9] = {
 	' ' | COLOR_PAIR(EMPTY),
@@ -44,9 +85,11 @@ class Piece {
 	public:
 		int x, y;
 		int data[16];
+		int mRotation;
+		int mPiece_ID;
 		Piece();
 		Piece(int piece);
-		void reset() {x = 4; y = 0;}
+		void reset();
 		void MoveRight() {x++;}
 		void MoveLeft() {x--;}
 		void MoveUp() {y--;}
@@ -56,24 +99,35 @@ class Piece {
 };
 
 Piece::Piece()
-: x(4), y(0)
+: x(4), y(0), mPiece_ID(5), mRotation(0)
 {
-	memcpy(data, piecesCodes[0], 16 * sizeof(int));
+	memcpy(data, piecesCodes[0][mRotation], 16 * sizeof(int));
 }
 
-Piece::Piece(int pieceNum)
+Piece::Piece(int piece_ID)
 :
-x(1), y(1)
+x(1), y(1), mPiece_ID(piece_ID), mRotation(0)
 {
-	memcpy(data, piecesCodes[pieceNum], 16 * sizeof(int));
+	memcpy(data, piecesCodes[mPiece_ID][mRotation], 16 * sizeof(int));
+}
+
+void Piece::reset()
+{
+	x = 4; y = 0;
+	mPiece_ID = rand() % 7;
+	memcpy(data, piecesCodes[mPiece_ID][mRotation], 16 * sizeof(int));
 }
 
 void Piece::rotateLeft()
 {
+	mRotation = (--mRotation < 0 ? 3 : mRotation);
+	memcpy(data, piecesCodes[mPiece_ID][mRotation], 16 * sizeof(int));
 }
 
 void Piece::rotateRight()
 {
+	mRotation = (++mRotation) % 4;
+	memcpy(data, piecesCodes[mPiece_ID][mRotation], 16 * sizeof(int));
 }
 
 class Board {
@@ -253,6 +307,9 @@ void Board::movePiece(int ch)
 			case 'a':
 				activePiece.rotateLeft();
 				break;
+			case 's':
+				activePiece.rotateRight();
+				break;
 			default:
 				break;
 		}
@@ -272,8 +329,8 @@ int main()
 	curs_set(0);           // set the cursor to invisible
 	start_color();         // setup tetris colors
 
-	int height = 21;
-	int width = 14;
+	int height = 25;
+	int width = 12;
 	int x0 = 10, y0 = 10;
 
 	WINDOW *win = newwin(height, width * COLS_PER_CELL, y0, x0);
