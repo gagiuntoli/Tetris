@@ -9,32 +9,32 @@ using namespace std;
 
 enum {
 	EMPTY = 0,
-	PIECE_1, 
-	PIECE_2,
-	PIECE_3,
-	PIECE_4,
-	PIECE_5,
-	PIECE_6,
-	PIECE_7,
+	PIEC1, 
+	PIEC2,
+	PIEC3,
+	PIEC4,
+	PIEC5,
+	PIEC6,
+	PIEC7,
 	BORDER
 
 };
 
 constexpr int piecesCodes[1][16] = {
-	{       EMPTY, PIECE_1, EMPTY, EMPTY,
-		PIECE_1, PIECE_1, PIECE_1, EMPTY, 
+	{       EMPTY, PIEC1, EMPTY, EMPTY,
+		PIEC1, PIEC1, PIEC1, EMPTY, 
 		EMPTY, EMPTY, EMPTY, EMPTY,
 	       	EMPTY, EMPTY, EMPTY, EMPTY}};
 
 constexpr int colors[9] = {
 	' ' | COLOR_PAIR(EMPTY),
-	' ' | COLOR_PAIR(PIECE_1),
-	' ' | COLOR_PAIR(PIECE_2),
-	' ' | COLOR_PAIR(PIECE_3),
-	' ' | COLOR_PAIR(PIECE_4),
-	' ' | COLOR_PAIR(PIECE_5),
-	' ' | COLOR_PAIR(PIECE_6),
-	' ' | COLOR_PAIR(PIECE_7),
+	' ' | COLOR_PAIR(PIEC1),
+	' ' | COLOR_PAIR(PIEC2),
+	' ' | COLOR_PAIR(PIEC3),
+	' ' | COLOR_PAIR(PIEC4),
+	' ' | COLOR_PAIR(PIEC5),
+	' ' | COLOR_PAIR(PIEC6),
+	' ' | COLOR_PAIR(PIEC7),
 	' ' | COLOR_PAIR(BORDER)};
 
 constexpr int COLS_PER_CELL = 2;
@@ -93,6 +93,8 @@ class Board {
 		bool checkCollisionVertical();
 		bool checkCollisionToLeft();
 		bool checkCollisionToRight();
+		bool lastRowCompleted();
+		void deleteRow();
 };
 
 Board::Board(WINDOW *win, int height, int width)
@@ -186,6 +188,24 @@ bool Board::checkCollisionToLeft()
 	return false;
 }
 
+bool Board::lastRowCompleted()
+{
+	for (int j = 1; j < mWidth - 1; j++) {
+		if(data[(mHeight - 2) * mWidth + j] == EMPTY)
+			return false;
+	}
+	return true;
+}
+
+void Board::deleteRow()
+{
+	for (int i = mHeight - 2; i > 0; i--) {
+		for (int j = 1; j < mWidth - 1; j++) {
+			data[i * mWidth + j] = data[(i - 1) * mWidth + j];
+		}
+	}
+}
+
 bool Board::checkCollisionToRight()
 {
 	int maxX = 0;
@@ -206,6 +226,8 @@ bool Board::checkCollisionToRight()
 void Board::movePiece(int ch)
 {
 	if (checkCollisionVertical()) {
+		while(lastRowCompleted())
+			deleteRow();
 		addNewPiece();
 	} else {
 
@@ -241,9 +263,9 @@ void Board::movePiece(int ch)
 
 int main()
 {
-	initscr(); // initialize curses
-	noecho(); // no echo
-	cbreak(); // one character at the time
+	initscr();             // initialize curses
+	noecho();              // no echo
+	cbreak();              // one character at the time
 	nodelay(stdscr, TRUE);
 	keypad(stdscr, TRUE);  // allow arrow keys
 	timeout(0);            // no blocking on getch()
@@ -251,21 +273,21 @@ int main()
 	start_color();         // setup tetris colors
 
 	int height = 21;
-	int width = 12;
+	int width = 14;
 	int x0 = 10, y0 = 10;
 
 	WINDOW *win = newwin(height, width * COLS_PER_CELL, y0, x0);
 
 	start_color();
-	init_pair(PIECE_1, COLOR_YELLOW, COLOR_GREEN);
-	init_pair(PIECE_2, COLOR_YELLOW, COLOR_RED);
-	init_pair(PIECE_3, COLOR_YELLOW, COLOR_CYAN);
-	init_pair(PIECE_4, COLOR_YELLOW, COLOR_BLUE);
-	init_pair(PIECE_5, COLOR_YELLOW, COLOR_WHITE);
-	init_pair(PIECE_6, COLOR_YELLOW, COLOR_MAGENTA);
-	init_pair(PIECE_7, COLOR_YELLOW, COLOR_YELLOW);
-	init_pair(BORDER, COLOR_YELLOW, COLOR_WHITE);
 	init_pair(EMPTY, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(PIEC1, COLOR_YELLOW, COLOR_GREEN);
+	init_pair(PIEC2, COLOR_YELLOW, COLOR_RED);
+	init_pair(PIEC3, COLOR_YELLOW, COLOR_CYAN);
+	init_pair(PIEC4, COLOR_YELLOW, COLOR_BLUE);
+	init_pair(PIEC5, COLOR_YELLOW, COLOR_WHITE);
+	init_pair(PIEC6, COLOR_YELLOW, COLOR_MAGENTA);
+	init_pair(PIEC7, COLOR_YELLOW, COLOR_YELLOW);
+	init_pair(BORDER, COLOR_YELLOW, COLOR_WHITE);
 
 	Board board(win, height, width);
         board.addNewPiece();
@@ -278,6 +300,6 @@ int main()
 		sleep(0.1);
 	}
 
-	endwin(); // restore terminal settings
+	endwin();               // restore terminal settings
 	return 0;
 }
